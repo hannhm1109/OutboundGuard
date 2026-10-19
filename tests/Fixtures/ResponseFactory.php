@@ -8,8 +8,15 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class ResponseFactory
 {
-    public function __invoke(): MockResponse
+    public function __invoke(string $method, string $url): MockResponse
     {
-        return new MockResponse('ok', ['total_time' => 0.025]);
+        $duration = match (parse_url($url, PHP_URL_PATH)) {
+            '/products/42' => 0.2,
+            '/shipping' => 0.6,
+            '/taxes' => 0.04,
+            default => 0.025,
+        };
+
+        return new MockResponse('ok', ['total_time' => $duration]);
     }
 }

@@ -1,0 +1,75 @@
+{% extends '@WebProfiler/Profiler/layout.html.twig' %}
+
+{% block toolbar %}
+    {% set report = collector.report %}
+    {% set status_color = report.budgetExceeded ? 'red' : (report.hasWarnings ? 'yellow' : 'normal') %}
+    {% set icon %}
+        {{ block('outbound_guard_icon') }}
+        <span class="sf-toolbar-value">{{ report.callCount }}</span>
+        <span class="sf-toolbar-label">HTTP calls</span>
+    {% endset %}
+    {% set text %}
+        <div class="sf-toolbar-info-piece"><b>OutboundGuard</b><span>{{ report.budgetExceeded ? 'Budget exceeded' : 'Outbound HTTP summary' }}</span></div>
+        <div class="sf-toolbar-info-piece"><b>Known total time</b><span>{{ report.totalDurationMs|number_format(2, '.', '') }} ms</span></div>
+        <div class="sf-toolbar-info-piece"><b>Repeated calls</b><span>{{ report.duplicateCallCount }}</span></div>
+        <div class="sf-toolbar-info-piece"><b>Slow calls</b><span>{{ report.slowCallCount }}</span></div>
+        <div class="sf-toolbar-info-piece"><b>Pending calls</b><span>{{ report.pendingCallCount }}</span></div>
+    {% endset %}
+    {{ include('@WebProfiler/Profiler/toolbar_item.html.twig', {link: profiler_url, name: 'outbound_guard', status: status_color}) }}
+{% endblock %}
+
+{% block menu %}
+    <span class="label {{ collector.report.hasWarnings ? 'label-status-warning' }}">
+        <span class="icon">{{ block('outbound_guard_icon') }}</span>
+        <strong>OutboundGuard</strong>
+        <span class="count">{{ collector.report.callCount }}</span>
+    </span>
+{% endblock %}
+
+{% block panel %}
+    {% set report = collector.report %}
+    <h2>OutboundGuard</h2>
+    <div class="metrics">
+        <div class="metric"><span class="value">{{ report.callCount }}</span><span class="label">HTTP calls / maximum {{ report.budget.maxCalls }}</span></div>
+        <div class="metric"><span class="value">{{ report.totalDurationMs|number_format(2, '.', '') }} <span class="unit">ms</span></span><span class="label">Known total / maximum {{ report.budget.maxTotalDurationMs }} ms</span></div>
+        <div class="metric"><span class="value">{{ report.slowestDurationMs is null ? 'Unknown' : report.slowestDurationMs|number_format(2, '.', '') ~ ' ms' }}</span><span class="label">Slowest observed call</span></div>
+        <div class="metric"><span class="value">{{ report.duplicateCallCount }}</span><span class="label">Extra calls across {{ report.duplicateGroupCount }} repeated endpoints</span></div>
+        <div class="metric"><span class="value">{{ report.slowCallCount }}</span><span class="label">Calls over {{ report.budget.slowCallThresholdMs }} ms</span></div>
+    </div>
+
+    {% if report.unknownDurationCount > 0 %}
+        <div class="warning"><p>{{ report.unknownDurationCount }} call(s) have unknown duration, including {{ report.pendingCallCount }} pending. Displayed durations are partial; responses are never forced to complete for profiling.</p></div>
+    {% endif %}
+
+    <h3>Warnings</h3>
+    {% if report.hasWarnings %}
+        <div class="warning"><ul>{% for warning in report.warnings %}<li data-warning-code="{{ warning.code }}">{{ warning.message }}</li>{% endfor %}</ul></div>
+    {% else %}
+        <div class="empty"><p>No outbound HTTP warnings.</p></div>
+    {% endif %}
+
+    <h3>Outbound endpoints</h3>
+    {% if report.groups is empty %}
+        <div class="empty"><p>No outbound HTTP calls were collected.</p></div>
+    {% else %}
+        <table class="outbound-guard-calls">
+            <thead><tr><th>Method</th><th>Target</th><th>Calls</th><th>Known duration</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for group in report.groups %}
+                    <tr>
+                        <td>{{ group.method }}</td>
+                        <td><code>{{ group.target }}</code></td>
+                        <td>{{ group.count }}</td>
+                        <td>{{ group.unknown_duration_count == group.count ? 'Unknown' : group.duration_ms|number_format(2, '.', '') ~ ' ms' }}{% if group.unknown_duration_count > 0 %} ({{ group.unknown_duration_count }} unknown){% endif %}</td>
+                        <td>{{ group.status_codes is empty ? 'Unknown' : group.status_codes|join(', ') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <p class="help">Duplicates compare method and endpoint while ignoring query strings and bodies. Total time sums transfers and can exceed wall-clock time when calls overlap. URL paths are hidden by default.</p>
+{% endblock %}
+
+{% block outbound_guard_icon %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3 4 6v6c0 4 4 7 8 9 4-2 8-5 8-9V6l-8-3Z"/><path d="M8 15l7-7m-5 0h5v5"/></svg>
+{% endblock %}

@@ -6,6 +6,8 @@ namespace Hanane\OutboundGuardBundle\Tests\Fixtures;
 
 use Hanane\OutboundGuardBundle\Collector\OutboundCallCollector;
 use Hanane\OutboundGuardBundle\OutboundGuardBundle;
+use Symfony\Bundle\TwigBundle\TwigBundle;
+use Symfony\Bundle\WebProfilerBundle\WebProfilerBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -13,14 +15,26 @@ use Symfony\Component\HttpKernel\Kernel;
 
 final class TestKernel extends Kernel
 {
-    public function __construct(private readonly bool $guardEnabled = true, private readonly bool $capturePaths = false, private readonly bool $httpClientEnabled = true)
-    {
+    /** @param array<string, mixed> $guardConfig */
+    public function __construct(
+        private readonly bool $guardEnabled = true,
+        private readonly bool $capturePaths = false,
+        private readonly bool $httpClientEnabled = true,
+        private readonly array $guardConfig = [],
+        private readonly bool $profilerEnabled = false,
+    ) {
         parent::__construct('test_'.bin2hex(random_bytes(6)), true);
     }
 
     public function registerBundles(): iterable
     {
         yield new FrameworkBundle();
+
+        if ($this->profilerEnabled) {
+            yield new TwigBundle();
+            yield new WebProfilerBundle();
+        }
+
         yield new OutboundGuardBundle();
     }
 
@@ -43,6 +57,19 @@ final class TestKernel extends Kernel
                 'enabled' => $this->guardEnabled,
                 'capture_paths' => $this->capturePaths,
             ]);
+            $container->loadFromExtension('outbound_guard', $this->guardConfig);
+
+            if ($this->profilerEnabled) {
+                $container->loadFromExtension('framework', [
+                    'test' => true,
+                    'router' => ['resource' => __DIR__.'/routes.php', 'utf8' => true],
+                    'profiler' => ['enabled' => true, 'collect' => true, 'only_main_requests' => true],
+                ]);
+                $container->loadFromExtension('twig', ['strict_variables' => true]);
+                $container->loadFromExtension('web_profiler', ['toolbar' => true]);
+                $container->register(ProfilerController::class)->setAutowired(true)->setPublic(true);
+                $container->setAlias('test.twig', 'twig')->setPublic(true);
+            }
 
             if ($this->guardEnabled) {
                 $container->setAlias('test.outbound_collector', OutboundCallCollector::class)->setPublic(true);

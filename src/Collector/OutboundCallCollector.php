@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Hanane\OutboundGuardBundle\Collector;
 
+use Hanane\OutboundGuardBundle\Analysis\Budget;
+use Hanane\OutboundGuardBundle\Analysis\OutboundAnalyzer;
+use Hanane\OutboundGuardBundle\Analysis\OutboundReport;
 use Hanane\OutboundGuardBundle\Metadata\OutboundCall;
 use Hanane\OutboundGuardBundle\Metadata\RequestTarget;
 use Symfony\Contracts\Service\ResetInterface;
@@ -15,8 +18,11 @@ final class OutboundCallCollector implements ResetInterface
     private array $calls = [];
     private string $fingerprintKey;
 
-    public function __construct(private readonly bool $capturePaths = false)
-    {
+    public function __construct(
+        private readonly bool $capturePaths = false,
+        private readonly Budget $budget = new Budget(),
+        private readonly OutboundAnalyzer $analyzer = new OutboundAnalyzer(),
+    ) {
         $this->reset();
     }
 
@@ -39,6 +45,11 @@ final class OutboundCallCollector implements ResetInterface
     public function getCallCount(): int
     {
         return count($this->calls);
+    }
+
+    public function getReport(): OutboundReport
+    {
+        return $this->analyzer->analyze($this->calls, $this->budget);
     }
 
     /** Sum of known terminal transfer durations, not incoming-request wall-clock time. */

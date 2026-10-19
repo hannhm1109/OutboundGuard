@@ -4,6 +4,10 @@
     "type": "symfony-bundle",
     "license": "MIT",
     "keywords": ["symfony", "http-client", "profiling", "performance"],
+    "suggest": {
+        "symfony/twig-bundle": "Render the optional OutboundGuard profiler panel.",
+        "symfony/web-profiler-bundle": "Show outbound HTTP budgets, warnings and grouped calls in the Symfony profiler."
+    },
     "require": {
         "php": ">=8.1",
         "symfony/config": "^6.4 || ^7.4 || ^8.1",
@@ -18,7 +22,11 @@
     "require-dev": {
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^10.5",
-        "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.1"
+        "symfony/browser-kit": "^6.4 || ^7.4 || ^8.1",
+        "symfony/css-selector": "^6.4 || ^7.4 || ^8.1",
+        "symfony/framework-bundle": "^6.4 || ^7.4 || ^8.1",
+        "symfony/twig-bundle": "^6.4 || ^7.4 || ^8.1",
+        "symfony/web-profiler-bundle": "^6.4 || ^7.4 || ^8.1"
     },
     "autoload": {
         "psr-4": {

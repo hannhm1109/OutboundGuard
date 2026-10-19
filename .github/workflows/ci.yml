@@ -37,6 +37,11 @@ jobs:
             "symfony/http-client:$SYMFONY_VERSION" \
             "symfony/http-foundation:$SYMFONY_VERSION" \
             "symfony/http-kernel:$SYMFONY_VERSION"
-          composer require --dev --no-interaction --no-update "symfony/framework-bundle:$SYMFONY_VERSION"
+          composer require --dev --no-interaction --no-update \
+            "symfony/framework-bundle:$SYMFONY_VERSION" \
+            "symfony/twig-bundle:$SYMFONY_VERSION" \
+            "symfony/web-profiler-bundle:$SYMFONY_VERSION" \
+            "symfony/browser-kit:$SYMFONY_VERSION" \
+            "symfony/css-selector:$SYMFONY_VERSION"
       - run: composer update --prefer-dist --no-progress --no-interaction
       - run: composer check
