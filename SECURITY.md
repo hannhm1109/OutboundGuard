@@ -32,4 +32,4 @@ Dependency advisories are checked with `composer audit`; absence of known adviso
 
 Use the repository's **Report a vulnerability** option if private reporting is enabled. Otherwise, open an issue containing only a request for a private contact channel. Do not include credentials, real URLs containing tokens, captured profiles, or exploit details in a public issue.
 
-The package is currently unreleased. Use the latest source revision while evaluating it and review this policy before the first public release.
+The initial release series is `0.1.x`. Use the latest available patch release while evaluating it and report security issues through the channel described above.

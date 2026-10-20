@@ -9,7 +9,7 @@
 
 Start with `0.1.0`: the MVP is useful and tested, while API and normalization details can still evolve before a `1.0` compatibility commitment. Do not add a `version` field to `composer.json`; Composer/Packagist infer it from the Git tag. Never move a tag once published. See [Composer's version guidance](https://getcomposer.org/doc/04-schema.md#version).
 
-The package is not yet published. Its public metadata endpoint returned 404 when checked on 2026-10-19; this is not a name reservation or proof of account/vendor ownership. Verify availability and your Packagist permissions at submission time.
+The initial release is `0.1.0`, dated 2026-10-20. Packagist registration is pending. Its public metadata endpoint returned 404 when checked on 2026-10-20; this is not a name reservation or proof of account/vendor ownership. Verify availability and your Packagist permissions at submission time.
 
 ## Suggested descriptions
 
@@ -58,10 +58,10 @@ Required when actually publishing:
 - [ ] Confirm the final commit passes local checks and all GitHub Actions jobs are green.
 - [ ] Recheck dependency advisories and package-name/account permissions.
 - [ ] Review the generated archive and repeat the clean-consumer install.
-- [ ] Move the initial changelog entry from Unreleased to `0.1.0` with the actual release date.
+- [x] Move the initial changelog entry from Unreleased to `0.1.0` with the actual release date.
 - [ ] Create and push the annotated `v0.1.0` tag on the reviewed commit.
 - [ ] Submit the repository URL on Packagist and configure its GitHub update integration.
 - [ ] Verify Packagist lists `0.1.0`, then test `composer require --dev hanane/outbound-guard-bundle:^0.1` without a custom repository.
 - [ ] Update README publication status and create concise GitHub release notes.
 
-Tagging and Packagist submission are separate publication actions. This preparation does not create either. Packagist's submission/update process is described in [its official documentation](https://packagist.org/about).
+Tagging and Packagist submission are separate publication actions. The GitHub tag makes the release available through a VCS repository; the standard Composer installation becomes available after Packagist indexes the package. Packagist's submission/update process is described in [its official documentation](https://packagist.org/about).

@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0 - 2026-10-20
 
-Initial release candidate: `0.1.0`.
+Initial release for development and testing.
 
 ### Added
 
@@ -17,4 +17,4 @@ Initial release candidate: `0.1.0`.
 
 - Preserve buffering defaults set through `withOptions()` on the monitoring client, including chained clones and per-request overrides.
 
-No release tag or Packagist publication has been created yet.
+Real-application evaluation and feedback will guide subsequent releases.

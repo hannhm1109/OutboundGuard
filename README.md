@@ -13,7 +13,7 @@ An incoming request can quietly call the same API endpoint several times, exceed
 
 Warnings are advisory: OutboundGuard does not optimize, cache, retry or block requests. There is no database or separate dashboard.
 
-The first release is prepared as `0.1.0`; no release tag or Packagist publication has been created yet. See the [release checklist](docs/releasing.md) for the remaining publication steps.
+The initial release is `0.1.0`, intended for development and testing. Packagist registration is pending; use the GitHub installation below until it is indexed. See the [release checklist](docs/releasing.md) for publication status.
 
 ## Requirements
 
@@ -35,11 +35,11 @@ After the first Packagist release, install it as a development dependency:
 composer require --dev hanane/outbound-guard-bundle
 ```
 
-Until publication, install the current source directly from GitHub in a Symfony application:
+Until Packagist registration is complete, install the tagged release directly from GitHub in a Symfony application:
 
 ```console
 composer config repositories.outbound-guard vcs https://github.com/hannhm1109/OutboundGuard.git
-composer require --dev hanane/outbound-guard-bundle:dev-main
+composer require --dev hanane/outbound-guard-bundle:0.1.0
 ```
 
 For local bundle development, a [Composer path repository](https://getcomposer.org/doc/05-repositories.md#path) pointing to your checkout can be used instead.
