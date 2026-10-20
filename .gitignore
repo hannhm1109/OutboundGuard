@@ -6,4 +6,7 @@
 /.phpunit.result.cache
 /.idea/
 /.vscode/
-/.env.local
+/.env
+/.env.*
+/auth.json
+/composer.phar

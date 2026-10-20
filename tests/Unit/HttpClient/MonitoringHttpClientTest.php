@@ -104,6 +104,37 @@ final class MonitoringHttpClientTest extends TestCase
         self::assertSame(250.0, $collector->getTotalDurationMs());
     }
 
+    public function testBufferingDefaultsSurviveChainedWithOptionsCalls(): void
+    {
+        $collector = new OutboundCallCollector();
+        $client = new MonitoringHttpClient(new MockHttpClient(new MockResponse('body', ['total_time' => 0.01])), $collector);
+        $configured = $client->withOptions(['buffer' => false])->withOptions(['base_uri' => 'https://api.example.com']);
+        $response = $configured->request('GET', '/items');
+
+        self::assertSame('body', $response->getContent());
+        self::assertSame(1, $collector->getCallCount());
+        self::assertSame(CallOutcome::Success, $collector->getCalls()[0]->getOutcome());
+        $this->expectException(TransportExceptionInterface::class);
+        $this->expectExceptionMessage('buffering is disabled');
+        $response->getContent();
+    }
+
+    public function testPerRequestBufferingOverridesTheCloneWithoutChangingTheOriginalClient(): void
+    {
+        $collector = new OutboundCallCollector();
+        $client = new MonitoringHttpClient(new MockHttpClient([
+            new MockResponse('overridden', ['total_time' => 0.01]),
+            new MockResponse('original', ['total_time' => 0.01]),
+        ]), $collector);
+        $configured = $client->withOptions(['buffer' => false]);
+        $overridden = $configured->request('GET', 'https://api.example.com/items', ['buffer' => true]);
+        $original = $client->request('GET', 'https://api.example.com/items');
+
+        self::assertSame(['overridden', 'overridden'], [$overridden->getContent(), $overridden->getContent()]);
+        self::assertSame(['original', 'original'], [$original->getContent(), $original->getContent()]);
+        self::assertSame(2, $collector->getCallCount());
+    }
+
     public function testTransportFailureBeforeHeadersIsRecordedWithoutTheErrorMessage(): void
     {
         $collector = new OutboundCallCollector();

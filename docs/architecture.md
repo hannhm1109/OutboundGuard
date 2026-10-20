@@ -1,10 +1,10 @@
-# Architecture through Phase 2
+# Architecture
 
 ## Why the idea works
 
 An incoming request can trigger an external HTTP version of N+1: repeated work is easy to miss when individual client calls look harmless. Symfony already exposes the needed extension points. A small observer and an in-memory collector make this visible without changing application call sites or introducing a storage system.
 
-Phase 1 establishes observation and isolation. Phase 2 analyzes the same records without changing the transport integration. A pure analyzer now implements the four requested rules, while the profiler reads its safe report.
+Collection establishes observation and isolation. A pure analyzer applies four simple rules to the same records, while the profiler reads their safe report.
 
 ## Symfony decisions
 
@@ -27,6 +27,8 @@ No new application-facing HTTP interface is needed. Existing `HttpClientInterfac
 Measuring only the runtime of `request()` would mostly measure request scheduling. Calling `getContent()` from that method would force synchronous consumption and break streaming.
 
 `AsyncDecoratorTrait` supplies Symfony-compatible `stream()` and `withOptions()` behavior. `AsyncResponse` supplies the response wrapper and invokes a generator callback as chunks are processed. Our callback passes the exact chunks through and reads only status, timing and cancellation information. It never examines chunk content.
+
+The monitor overrides `withOptions()` only to carry buffering defaults into `AsyncResponse`, which owns the buffer. Forwarding `buffer: false` solely to the inner client would otherwise silently re-enable buffering at the wrapper. Clone semantics and per-request precedence are regression-tested. Buffer defaults set only on an already wrapped inner client are not introspectable through the contract and must be repeated at the monitored call site.
 
 The call object is initialized just after `AsyncResponse` accepts the request, using its non-blocking `getInfo('url')` to obtain the resolved original URL. The callback holds a reference to that one object. This short deferred initialization avoids reimplementing URI resolution or retaining raw options in our records.
 
@@ -114,6 +116,8 @@ The Twig template extends the native profiler layout and provides toolbar, menu 
 | `.github/workflows/ci.yml` | Checks for Symfony 6.4/PHP 8.1, Symfony 7.4/PHP 8.2, and Symfony 8.1/PHP 8.4 |
 | `README.md`, `docs/architecture.md` | Usage, scope, design rationale and limitations |
 | `.gitignore`, `.gitattributes`, `.editorconfig` | Dependency/cache exclusions and text conventions |
+| `LICENSE`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md` | License, initial release notes, verification and privacy/reporting policy |
+| `docs/index.md`, `docs/releasing.md` | Documentation entry point, publication metadata and release checklist |
 
 ## Tests and useful experiments
 
@@ -144,9 +148,9 @@ Read the tests in this order:
 
 ## Scope boundary
 
-Phase 2 includes global budgets, duplicate grouping, slow-call detection, warnings and the native profiler panel. Controller attributes remain optional and are not part of this implementation. No custom persistence, event bus, service locator, HTTP replacement framework or external observability system is introduced.
+The MVP includes global budgets, duplicate grouping, slow-call detection, warnings and the native profiler panel. Controller attributes remain optional and are not part of this implementation. No custom persistence, event bus, service locator, HTTP replacement framework or external observability system is introduced.
 
-Phase 3 is limited to polish and publication preparation. Future controller overrides could supply a different budget to this same analyzer; they do not need a rule engine or transport changes.
+Future controller overrides could supply a different budget to this same analyzer; they do not need a rule engine or transport changes. Publication preparation adds packaging metadata, a license, documentation and verification without expanding runtime features.
 
 ## References checked for this implementation
 

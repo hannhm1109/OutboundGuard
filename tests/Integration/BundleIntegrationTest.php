@@ -153,6 +153,11 @@ final class BundleIntegrationTest extends TestCase
         yield 'negative slow threshold' => ['slow_call_threshold_ms', -1];
         yield 'invalid string' => ['max_calls', 'many'];
         yield 'fractional milliseconds' => ['slow_call_threshold_ms', 1.5];
+        yield 'null limit' => ['max_calls', null];
+        yield 'boolean limit' => ['max_calls', true];
+        yield 'array limit' => ['max_total_duration_ms', []];
+        yield 'invalid enabled flag' => ['enabled', 'sometimes'];
+        yield 'invalid path flag' => ['capture_paths', []];
         yield 'unknown option' => ['max_cals', 5];
     }
 

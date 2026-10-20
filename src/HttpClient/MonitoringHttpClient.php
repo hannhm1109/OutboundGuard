@@ -19,6 +19,9 @@ final class MonitoringHttpClient implements HttpClientInterface
 {
     use AsyncDecoratorTrait;
 
+    // AsyncResponse owns buffering; this is the only client default it cannot inherit from the inner response.
+    private mixed $defaultBuffer = true;
+
     public function __construct(HttpClientInterface $client, private readonly OutboundCallCollector $collector)
     {
         $this->client = $client;
@@ -28,6 +31,7 @@ final class MonitoringHttpClient implements HttpClientInterface
     public function request(string $method, string $url, array $options = []): AsyncResponse
     {
         $call = null;
+        $options += ['buffer' => $this->defaultBuffer];
 
         try {
             $response = new AsyncResponse($this->client, $method, $url, $options, self::createObserver($call));
@@ -43,6 +47,19 @@ final class MonitoringHttpClient implements HttpClientInterface
         $call = $this->collector->start($method, is_string($resolvedUrl) ? $resolvedUrl : $url);
 
         return $response;
+    }
+
+    /** @param array<string, mixed> $options */
+    public function withOptions(array $options): static
+    {
+        $clone = clone $this;
+        $clone->client = $this->client->withOptions($options);
+
+        if (array_key_exists('buffer', $options)) {
+            $clone->defaultBuffer = $options['buffer'];
+        }
+
+        return $clone;
     }
 
     /** @return \Closure(ChunkInterface, AsyncContext): \Generator<int, ChunkInterface> */
@@ -72,7 +89,10 @@ final class MonitoringHttpClient implements HttpClientInterface
                     $call->finish(CallOutcome::TransportError, $durationMs);
                 }
             } elseif ($chunk->isLast()) {
-                $call->finish(null !== $call->getStatusCode() && $call->getStatusCode() >= 400 ? CallOutcome::HttpError : CallOutcome::Success, $durationMs);
+                $outcome = null !== $call->getStatusCode() && $call->getStatusCode() >= 400
+                    ? CallOutcome::HttpError
+                    : CallOutcome::Success;
+                $call->finish($outcome, $durationMs);
             }
 
             yield $chunk;

@@ -12,7 +12,9 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Profiler\Profile;
+use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Twig\Environment;
 
 final class ProfilerIntegrationTest extends TestCase
@@ -110,12 +112,24 @@ final class ProfilerIntegrationTest extends TestCase
     public function testCallsStartedInsideAStreamedResponseAreIncludedByLateCollection(): void
     {
         $kernel = new TestKernel(profilerEnabled: true);
-        $browser = new KernelBrowser($kernel);
+        $kernel->boot();
 
         try {
-            $browser->request('GET', '/stream');
-            self::assertSame(200, $browser->getResponse()->getStatusCode());
-            $profile = $browser->getProfile();
+            // Older BrowserKit versions terminate before sending streamed content. Model the real lifecycle explicitly.
+            $request = Request::create('/stream');
+            $response = $kernel->handle($request);
+            self::assertInstanceOf(StreamedResponse::class, $response);
+            ob_start();
+            try {
+                $response->sendContent();
+            } finally {
+                $content = ob_get_clean();
+            }
+            self::assertSame('streamed', $content);
+            $kernel->terminate($request, $response);
+            $profiler = $kernel->getContainer()->get('profiler');
+            self::assertInstanceOf(Profiler::class, $profiler);
+            $profile = $profiler->loadProfileFromResponse($response);
             self::assertInstanceOf(Profile::class, $profile);
             $data = $profile->getCollector('outbound_guard');
             self::assertInstanceOf(OutboundGuardDataCollector::class, $data);

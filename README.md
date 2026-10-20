@@ -9,47 +9,58 @@ outbound_guard:
     slow_call_threshold_ms: 500
 ```
 
-It transparently observes Symfony HttpClient calls, exposes reports for tests, and adds a small panel to an existing Symfony Web Profiler installation. Collection and detection are implemented through **Phase 2**; final publication work belongs to Phase 3.
+An incoming request can quietly call the same API endpoint several times, exceed its external-call budget, or spend most of its time waiting on integrations. OutboundGuard makes those patterns visible through testable reports and a small Symfony Web Profiler panel. Existing injected HttpClient calls keep their normal call sites.
+
+Warnings are advisory: OutboundGuard does not optimize, cache, retry or block requests. There is no database or separate dashboard.
+
+The first release is prepared as `0.1.0`; no release tag or Packagist publication has been created yet. See the [release checklist](docs/releasing.md) for the remaining publication steps.
 
 ## Requirements
 
-- PHP 8.1+ with Symfony 6.4; PHP 8.2+ with Symfony 7.4; PHP 8.4+ with Symfony 8.1.
-- Symfony HttpClient configured through FrameworkBundle's service container.
+| Symfony branch | Minimum PHP |
+| --- | --- |
+| 6.4 | 8.1 |
+| 7.4 | 8.2 |
+| 8.1 | 8.4.1 |
+
+Symfony HttpClient must be configured through FrameworkBundle's service container. Twig and WebProfilerBundle are optional for core metrics and required only for the profiler panel.
 
 The package name is `hanane/outbound-guard-bundle`, with namespace `Hanane\OutboundGuardBundle`. It has not been published to Packagist.
 
-## Local development
+## Installation
+
+After the first Packagist release, install it as a development dependency:
+
+```console
+composer require --dev hanane/outbound-guard-bundle
+```
+
+Until publication, install the current source directly from GitHub in a Symfony application:
+
+```console
+composer config repositories.outbound-guard vcs https://github.com/hannhm1109/OutboundGuard.git
+composer require --dev hanane/outbound-guard-bundle:dev-main
+```
+
+For local bundle development, a [Composer path repository](https://getcomposer.org/doc/05-repositories.md#path) pointing to your checkout can be used instead.
+
+## Verify the source checkout
 
 ```console
 composer install
 composer test
 composer analyse
 composer validate --strict
+composer audit
 ```
 
-`composer check` runs all three checks. Tests use `MockHttpClient` and `MockResponse`; they make no external HTTP requests. Composer needs network access to download dependencies.
+`composer check` runs tests, PHPStan level 8, strict Composer validation and strict PSR-4 autoload checks. `composer audit` separately checks installed dependency advisories. Tests use `MockHttpClient` and `MockResponse`; they make no external HTTP requests. Composer needs network access for dependency installation and auditing.
 
 This is a library, so `composer.lock` and `vendor/` are ignored. A local lock file records your installed development dependencies; consuming applications own their lock files.
 
-## Try it in a Symfony application
+## Bundle registration and configuration
 
-Until publication, add this repository as a Composer path repository in a separate Symfony application's `composer.json`:
-
-```json
-{
-    "repositories": [
-        {"type": "path", "url": "../OutboundGuard"}
-    ]
-}
-```
-
-Then run in that application:
-
-```console
-composer require --dev hanane/outbound-guard-bundle:@dev
-```
-
-Register the bundle for development and testing in `config/bundles.php`:
+Register the bundle for development and testing in `config/bundles.php`. If Symfony Flex adds an entry automatically, check that its environments are `dev` and `test`:
 
 ```php
 return [
@@ -89,7 +100,7 @@ The default client and FrameworkBundle's named/scoped clients are monitored auto
 
 ## Inspect metrics in tests
 
-Inject `Hanane\OutboundGuardBundle\Collector\OutboundCallCollector` into a test helper or application service. For a Symfony `KernelTestCase`, make it accessible through the test container if necessary:
+Inject `Hanane\OutboundGuardBundle\Collector\OutboundCallCollector` into a test helper or a service registered only for development/testing. For a Symfony `KernelTestCase`, make it accessible through the test container if necessary:
 
 ```yaml
 # config/services_test.yaml (import this file from your application's test configuration)
@@ -205,14 +216,27 @@ Application's injected HttpClientInterface
 
 The bundle uses `AbstractBundle` for configuration and service loading. A compiler pass decorates services tagged `http_client.client`, following Symfony's own HttpClient profiler integration. The transport is not separately decorated, so a scoped request is counted once.
 
-Manually constructed clients (`HttpClient::create()`) bypass the container and are outside automatic monitoring. Custom client services can opt in with Symfony's `http_client.client` tag; avoid tagging both nested wrappers and their transport. Counts represent logical calls, not individual redirect hops or attempts inside an existing retry decorator. Timing follows information reported by the wrapped client; no separate network instrumentation is installed.
+Manually constructed clients (`HttpClient::create()`) bypass the container and are outside automatic monitoring. Custom client services can opt in with Symfony's `http_client.client` tag; avoid tagging both nested wrappers and their transport. Counts represent logical client calls, including cached responses if an inner client provides them, rather than measured network operations. Redirect hops and individual retry attempts are not separately counted. Retry timing depends on the wrapped client and may describe only its final attempt; no separate network instrumentation is installed.
+
+The asynchronous observer owns its response buffer. Set `buffer` per request or through `withOptions()` on the injected, monitored client when streaming:
+
+```php
+$streamingClient = $httpClient->withOptions(['buffer' => false]);
+$response = $streamingClient->request('GET', $url);
+```
+
+Buffer defaults configured only on an inner client before decoration cannot be discovered through `HttpClientInterface`; repeat those settings at the monitored call site. This limitation also applies to custom clients that need a different implicit buffering default.
+
+Memory use grows with collected logical calls within a request. Use the bundle for development/testing and reset between units of work; it is not intended as an unbounded production request ledger.
 
 The analyzer performs no I/O and runs only when a report is requested. Warnings have stable order: call budget, duration budget, duplicate groups in first-seen order, then slow calls in request order.
 
 See [the architecture notes](docs/architecture.md) for design decisions, the file map, and interview talking points.
 
-## Remaining phases
+## Development, security and licensing
 
-Phases 1 and 2 are implemented. Phase 3 remains: cleanup, final security/configuration review, documentation and publication readiness, license file and release checklist.
+The [minimal test fixture](tests/Fixtures) boots a real Symfony kernel with mock APIs, checkout and streamed-response routes, and optional profiler integration. See [CONTRIBUTING.md](CONTRIBUTING.md) for development checks and [the documentation index](docs/index.md) for the file map and design notes. Tests and CI-only files are excluded from release archives; clone the repository to run the suite.
+
+Read [SECURITY.md](SECURITY.md) for the privacy boundary and vulnerability reporting. The package is licensed under the [MIT license](LICENSE).
 
 Persistence, dashboards, caching, retries, tracing, external integrations, controller attributes, and a custom PHPUnit framework are outside this implementation.

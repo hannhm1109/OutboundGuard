@@ -1,9 +1,19 @@
 {
     "name": "hanane/outbound-guard-bundle",
-    "description": "Observe outbound Symfony HttpClient calls with privacy-conscious, request-scoped metrics.",
+    "description": "Detect excessive, duplicated and slow Symfony HttpClient calls with safe metrics, configurable budgets and profiler integration.",
     "type": "symfony-bundle",
     "license": "MIT",
     "keywords": ["symfony", "http-client", "profiling", "performance"],
+    "homepage": "https://github.com/hannhm1109/OutboundGuard",
+    "authors": [
+        {"name": "Hanane", "homepage": "https://github.com/hannhm1109"}
+    ],
+    "support": {
+        "issues": "https://github.com/hannhm1109/OutboundGuard/issues",
+        "source": "https://github.com/hannhm1109/OutboundGuard",
+        "docs": "https://github.com/hannhm1109/OutboundGuard/blob/main/README.md",
+        "security": "https://github.com/hannhm1109/OutboundGuard/blob/main/SECURITY.md"
+    },
     "suggest": {
         "symfony/twig-bundle": "Render the optional OutboundGuard profiler panel.",
         "symfony/web-profiler-bundle": "Show outbound HTTP budgets, warnings and grouped calls in the Symfony profiler."
@@ -20,6 +30,7 @@
         "symfony/service-contracts": "^3.4"
     },
     "require-dev": {
+        "masterminds/html5": "^2.7.5",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^10.5",
         "symfony/browser-kit": "^6.4 || ^7.4 || ^8.1",
@@ -41,7 +52,16 @@
     "scripts": {
         "test": "@php vendor/bin/phpunit",
         "analyse": "@php vendor/bin/phpstan analyse --no-progress",
-        "check": ["@test", "@analyse", "@composer validate --strict"]
+        "check": ["@test", "@analyse", "@composer validate --strict", "@composer dump-autoload --optimize --strict-psr"]
+    },
+    "archive": {
+        "exclude": [
+            "/.editorconfig", "/.gitattributes", "/.github", "/.gitignore",
+            "/.env", "/.env.*", "/auth.json", "/composer.phar",
+            "/.phpunit.cache", "/.phpunit.result.cache", "/.tools",
+            "/composer.lock", "/phpstan.neon.dist", "/phpunit.xml.dist",
+            "/tests", "/var", "/vendor"
+        ]
     },
     "config": {
         "sort-packages": true,
