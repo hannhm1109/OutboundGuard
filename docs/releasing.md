@@ -9,7 +9,7 @@
 
 Start with `0.1.0`: the MVP is useful and tested, while API and normalization details can still evolve before a `1.0` compatibility commitment. Do not add a `version` field to `composer.json`; Composer/Packagist infer it from the Git tag. Never move a tag once published. See [Composer's version guidance](https://getcomposer.org/doc/04-schema.md#version).
 
-The initial release is `0.1.0`, dated 2026-10-20. Packagist registration is pending. Its public metadata endpoint returned 404 when checked on 2026-10-20; this is not a name reservation or proof of account/vendor ownership. Verify availability and your Packagist permissions at submission time.
+The initial release is `0.1.0`, dated 2026-10-20, published on [GitHub](https://github.com/hannhm1109/OutboundGuard/releases/tag/v0.1.0) and [Packagist](https://packagist.org/packages/hanane/outbound-guard-bundle). Packagist indexes commit `31b7e1c5958860fb9edae63b0bc59e5ac45e6e37` and reports that automatic updates are enabled. A fresh Composer installation without a custom repository and a PHP 8.1 smoke test passed on 2026-10-20.
 
 ## Suggested descriptions
 
@@ -53,15 +53,15 @@ Prepared in this repository:
 - [x] Development/cache/credential exclusions for release packaging.
 - [x] CI matrix for supported Symfony branches and dependency lower-bound checks.
 
-Required when actually publishing:
+First-release publication checks (completed on 2026-10-20; repeat for subsequent releases):
 
-- [ ] Confirm the final commit passes local checks and all GitHub Actions jobs are green.
-- [ ] Recheck dependency advisories and package-name/account permissions.
-- [ ] Review the generated archive and repeat the clean-consumer install.
+- [x] Confirm the final commit passes local checks and all GitHub Actions jobs are green.
+- [x] Recheck dependency advisories and package-name/account permissions.
+- [x] Review the generated archive and repeat the clean-consumer install.
 - [x] Move the initial changelog entry from Unreleased to `0.1.0` with the actual release date.
-- [ ] Create and push the annotated `v0.1.0` tag on the reviewed commit.
-- [ ] Submit the repository URL on Packagist and configure its GitHub update integration.
-- [ ] Verify Packagist lists `0.1.0`, then test `composer require --dev hanane/outbound-guard-bundle:^0.1` without a custom repository.
-- [ ] Update README publication status and create concise GitHub release notes.
+- [x] Create and push the annotated `v0.1.0` tag on the reviewed commit.
+- [x] Submit the repository URL on Packagist and configure its GitHub update integration.
+- [x] Verify Packagist lists `0.1.0`, then test `composer require --dev hanane/outbound-guard-bundle:^0.1` without a custom repository.
+- [x] Update README publication status and create concise GitHub release notes.
 
 Tagging and Packagist submission are separate publication actions. The GitHub tag makes the release available through a VCS repository; the standard Composer installation becomes available after Packagist indexes the package. Packagist's submission/update process is described in [its official documentation](https://packagist.org/about).

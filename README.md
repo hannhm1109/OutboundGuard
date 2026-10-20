@@ -13,7 +13,7 @@ An incoming request can quietly call the same API endpoint several times, exceed
 
 Warnings are advisory: OutboundGuard does not optimize, cache, retry or block requests. There is no database or separate dashboard.
 
-The initial release is `0.1.0`, intended for development and testing. Packagist registration is pending; use the GitHub installation below until it is indexed. See the [release checklist](docs/releasing.md) for publication status.
+The initial release is `0.1.0`, intended for development and testing. It is available on [Packagist](https://packagist.org/packages/hanane/outbound-guard-bundle), with [release notes on GitHub](https://github.com/hannhm1109/OutboundGuard/releases/tag/v0.1.0).
 
 ## Requirements
 
@@ -25,22 +25,17 @@ The initial release is `0.1.0`, intended for development and testing. Packagist 
 
 Symfony HttpClient must be configured through FrameworkBundle's service container. Twig and WebProfilerBundle are optional for core metrics and required only for the profiler panel.
 
-The package name is `hanane/outbound-guard-bundle`, with namespace `Hanane\OutboundGuardBundle`. It has not been published to Packagist.
+The package name is `hanane/outbound-guard-bundle`, with namespace `Hanane\OutboundGuardBundle`.
 
 ## Installation
 
-After the first Packagist release, install it as a development dependency:
+Install it as a development dependency in your Symfony application:
 
 ```console
 composer require --dev hanane/outbound-guard-bundle
 ```
 
-Until Packagist registration is complete, install the tagged release directly from GitHub in a Symfony application:
-
-```console
-composer config repositories.outbound-guard vcs https://github.com/hannhm1109/OutboundGuard.git
-composer require --dev hanane/outbound-guard-bundle:0.1.0
-```
+Composer resolves the published release from Packagist; no custom repository is required.
 
 For local bundle development, a [Composer path repository](https://getcomposer.org/doc/05-repositories.md#path) pointing to your checkout can be used instead.
 
